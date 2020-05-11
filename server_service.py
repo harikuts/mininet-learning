@@ -3,17 +3,39 @@
 # Message Receiver
 import os
 from socket import *
+import thread
+
+def enroll_client(conn, addr):
+    while True:
+        data = conn.recv(buf)
+        print "Received message from " + str(addr) + ": " + data
+        if data == "exit":
+            TCPSocks[port].close()
+            break
+
 host = ""
-port = 13000
+ports = [13000, 13001]
 buf = 1024
-addr = (host, port)
-UDPSock = socket(AF_INET, SOCK_DGRAM)
-UDPSock.bind(addr)
+print "Opening ports..."
+addrs = {}
+TCPSocks = {}
+for port in ports:
+    addr = (host, port)
+    addrs[port] = addr
+    TCPSock = socket(AF_INET, SOCK_STREAM)
+    try:
+        TCPSock.bind(addr)
+    except:
+        print "Address taken. Resetting and binding!"
+        TCPSock[port].close()
+        TCPSock.bind(addr)
+    TCPSock.listen(5)
+    TCPSocks[port] = TCPSock
+    print "\tPort " + str(port) + " opened!"
 print "Waiting to receive messages..."
 while True:
-    (data, addr) = UDPSock.recvfrom(buf)
-    print "Received message: " + data
-    if data == "exit":
-        break
-UDPSock.close()
+    for port in ports:
+        print("checking ", port)
+        conn, addr = TCPSocks[port].accept()
+        thread.start_new_thread(enroll_client, (conn, addr))
 os._exit(0)

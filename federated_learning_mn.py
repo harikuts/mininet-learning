@@ -23,20 +23,18 @@ class learningHost(Host):
 class MyTopo(Topo):
     def build(self):
         host1 = self.addHost('h1')
-        switch2 = self.addSwitch('s2')
+        switch1 = self.addSwitch('s1')
         host2 = self.addHost('h2')
-        self.addLink(host1, switch2)
-        self.addLink(switch2, host2)
-        switch3 = self.addSwitch('s3')
+        self.addLink(host1, switch1)
+        self.addLink(switch1, host2)
         host3 = self.addHost('h3')
-        self.addLink(host1, switch3)
-        self.addLink(switch3, host3)
+        self.addLink(switch1, host3)
 
 def configure():
   topo = MyTopo()
   net = Mininet(topo=topo)
   net.start()
-  h1, h2 = net.get('h1', 'h2')
+  h1, h2, h3 = net.get('h1', 'h2', 'h3')
   
   CLI(net)
 
