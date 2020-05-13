@@ -5,7 +5,7 @@ import os
 from socket import *
 import thread
 
-def enroll_client(conn, addr):
+def process_client(conn, addr):
     while True:
         data = conn.recv(buf)
         print "Received message from " + str(addr) + ": " + data
@@ -37,5 +37,5 @@ while True:
     for port in ports:
         print("checking ", port)
         conn, addr = TCPSocks[port].accept()
-        thread.start_new_thread(enroll_client, (conn, addr))
+        thread.start_new_thread(process_client, (conn, addr))
 os._exit(0)
