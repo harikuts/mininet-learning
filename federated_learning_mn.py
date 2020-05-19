@@ -33,6 +33,8 @@ class MyTopo(Topo):
 def configure():
   topo = MyTopo()
   net = Mininet(topo=topo)
+  # Add NAT connectivity
+  net.addNAT().configDefault()
   net.start()
   h1, h2, h3 = net.get('h1', 'h2', 'h3')
   
