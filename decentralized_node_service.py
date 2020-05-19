@@ -6,6 +6,8 @@ import argparse
 import netifaces as ni
 import time
 import os
+import learning_module
+from learning_module import Learner
 
 # Parameters
 BUFFER_SIZE = 1024
@@ -27,7 +29,9 @@ parser = argparse.ArgumentParser(description='New node to operate in decentraliz
 parser.add_argument( '--iplist', action = 'store', type = str, required = True, \
     help = 'List of other nodes IP addresses.')
 parser.add_argument('--ip', action = 'store', type = str, default=None, \
-    help = 'This nodes IP')
+    help = 'This nodes IP.')
+parser.add_argument( '--div', action = 'store', type = str, required = True, \
+    help = 'IP addresses with corresponding share of data.')
 args = parser.parse_args()
 
 try:
@@ -115,7 +119,7 @@ class Sender(threading.Thread):
             print(str(LOCALHOST) + ": Can't connect to "  + str((self.address, self.port)))
             print(e)
         # Socket behavior
-        for i in range(10):
+        while True:
             message = "Hello World!"
             try:
                 send_socket.send(str.encode(message))
@@ -127,6 +131,9 @@ class Sender(threading.Thread):
         send_socket.send(str.encode("<END>"))
         send_socket.close()
         os.exit(0)
+
+# Initialize learning model
+learner = Learner(LOCALHOST, args.div)
 
 for neighbor in NEIGHBORS:
     print(str(LOCALHOST) + ": Starting " + str(neighbor) + " listener")
