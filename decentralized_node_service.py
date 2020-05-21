@@ -30,8 +30,8 @@ parser.add_argument( '--iplist', action = 'store', type = str, required = True, 
     help = 'List of other nodes IP addresses.')
 parser.add_argument('--ip', action = 'store', type = str, default=None, \
     help = 'This nodes IP.')
-parser.add_argument( '--div', action = 'store', type = str, required = True, \
-    help = 'IP addresses with corresponding share of data.')
+parser.add_argument( '--datafile', action = 'store', type = str, required = True, \
+    help = 'Data file.')
 args = parser.parse_args()
 
 try:
@@ -133,7 +133,7 @@ class Sender(threading.Thread):
         os.exit(0)
 
 # Initialize learning model
-learner = Learner(LOCALHOST, args.div)
+learner = Learner(LOCALHOST, args.datafile)
 
 for neighbor in NEIGHBORS:
     print(str(LOCALHOST) + ": Starting " + str(neighbor) + " listener")
