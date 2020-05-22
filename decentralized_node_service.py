@@ -26,34 +26,32 @@ def get_ip_address():
 
 # MAIN PROGRAM :: SET-UP
 parser = argparse.ArgumentParser(description='New node to operate in decentralized setting.')
-parser.add_argument( '--iplist', action = 'store', type = str, required = True, \
-    help = 'List of other nodes IP addresses.')
+parser.add_argument( '--netlist', action = 'store', type = str, required = True, \
+    help = 'List of other nodes IP addresses and links.')
 parser.add_argument('--ip', action = 'store', type = str, default=None, \
     help = 'This nodes IP.')
 parser.add_argument( '--datafile', action = 'store', type = str, required = True, \
     help = 'Data file.')
 args = parser.parse_args()
 
+# Define LOCALHOST and one-hop NEIGHBORS, assemble NODELIST
 try:
-    with open(args.iplist, 'r') as f:
-        nodelist = [line.rstrip() for line in f.readlines()]
-        for line in nodelist:
+    LOCALHOST = args.ip if args.ip is not None else get_ip_address()
+    with open(args.netlist, 'r') as f:
+        nodeLines = [line.rstrip() for line in f.readlines()]
+        neighborLookup = {}
+        for nodeLine in nodeLines:
+            splits = nodeLine.split(":")
+            neighborLookup[splits[0]] = splits[1].split(",")
+        NEIGHBORS = neighborLookup[LOCALHOST]
+        NODELIST = [LOCALHOST,] + NEIGHBORS
+        for line in NODELIST:
             try:
                 socket.inet_aton(line)
             except socket.error:
-                print("Not a valid list of IP addresses. Enter valid list of IP addresses.")
-                quit()
+                raise ValueError("One or more IP addresses not valid.")
 except:
-    print("File not found. Enter valid list of IP addresses.")
-    quit()
-
-# Resolve host and neighbors 
-try:
-    LOCALHOST = args.ip if args.ip is not None else get_ip_address()
-    NEIGHBORS = nodelist[:]
-    NEIGHBORS.remove(LOCALHOST)
-except Exception as e:
-    print("Failed to resolve host and/or neighbors. See error below.")
+    print("Failed to resolve host and/or neighbors. Check file or args for errors.")
     print (str(e))
     quit()
 
@@ -64,7 +62,7 @@ print("Neighbors:", NEIGHBORS)
 inboundPhonebook = {}
 outboundPhonebook = {}
 localID = int(LOCALHOST.split('.')[-1])
-for node in nodelist:
+for node in NODELIST:
     nodeID =  int(node.split('.')[-1])
     inboundPhonebook[node] = LISTEN_PORT + (localID * 10) + nodeID
     outboundPhonebook[node] = LISTEN_PORT + (nodeID * 10) + localID
