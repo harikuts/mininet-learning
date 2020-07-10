@@ -15,7 +15,7 @@ def main():
 # Starts server and waits for connections, creates a thread for each connection
 def start_server():
     # Set host and port information
-    host = "127.0.0.1"
+    host = "10.0.0.1"
     port = 8000
 
     # Create socket
@@ -50,7 +50,7 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
     while is_active:
         # Receive input from the connection
         client_input = receive_input(connection, max_buffer_size)
-        if "--QUIT--" in client_input:
+        if "--quit--" in client_input:
             print("Client at port " + str(port) + " is requesting to quit.")
             connection.close()
             print("\tConnection closed.")
@@ -78,5 +78,11 @@ def process_input(input_str):
 
 # MAIN
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Run client service.')
+    parser.add_argument( '--ip', action = 'store', type = str, required = True, \
+        help = 'Local IP address.')
+    parser.add_argument( '--net', action = 'store', type = str, required = True, \
+        help = 'File of network links with each line in the format <LOCAL_IP:NEIGHBOR_IP,NEIGHBOR_IP,etc.>.')
+    args = parser.parse_args()
+    server_process(args.ip)
     
