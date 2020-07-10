@@ -2,6 +2,9 @@
 import socket
 import sys
 import argparse
+import traceback
+import time
+from threading import Thread
 
 """
 This code is based on code from
@@ -15,24 +18,34 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 def client_process(neighbor_ip):
     # Get host and port information
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "10.0.0.1"
+    host = neighbor_ip
     port = 8000
     try:
         soc.connect((host, port))
     except:
         print("Connection Error")
         sys.exit()
-    print("Please enter 'quit' to exit.")
-    message = input(">>> ")
-    while message != 'quit':
+    # print("Please enter 'quit' to exit.")
+    # message = input(">>> ")
+    # while message != 'quit':
+    #     soc.sendall(message.encode("utf8"))
+    #     # Null
+    #     print("Delivering...")
+    #     if soc.recv(5120).decode("utf8") == "-":
+    #         pass
+    #     print("\tSent!")
+    #     message = input(">>> ")
+    # soc.send(b'--quit--')
+    message = "hi"
+    while True:
         soc.sendall(message.encode("utf8"))
-        # Null
         print("Delivering...")
         if soc.recv(5120).decode("utf8") == "-":
             pass
         print("\tSent!")
-        message = input(">>> ")
-    soc.send(b'--quit--')
+        time.sleep(5)
+        
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run client service.')
     parser.add_argument( '--ip', action = 'store', type = str, required = True, \
@@ -49,6 +62,12 @@ if __name__ == "__main__":
             info = line.split(':')
             net_lookup[info[0]] = info[1].split(',')
     
-    print (net_lookup[args.ip])
-
-    client_process("10.0.0.1")
+    print ("Neighbors: " + str(net_lookup[args.ip]))
+    for neighbor_ip in net_lookup[args.ip]:
+        print (neighbor_ip)
+        try:
+            Thread(target=client_process, args=(neighbor_ip,)).start()
+            print("\tNeighbor thread started.")
+        except:
+            print("\tCan't start thread.")
+            traceback.print_exc()

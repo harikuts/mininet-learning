@@ -3,6 +3,7 @@ import socket
 import sys
 import traceback
 from threading import Thread
+import argparse
 
 """
 This code is based on code from
@@ -10,12 +11,12 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 """
 
 def main():
-    start_server()
+    start_server('127.0.0.1')
 
 # Starts server and waits for connections, creates a thread for each connection
-def start_server():
+def start_server(ip_addr):
     # Set host and port information
-    host = "10.0.0.1"
+    host = ip_addr
     port = 8000
 
     # Create socket
@@ -81,8 +82,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run client service.')
     parser.add_argument( '--ip', action = 'store', type = str, required = True, \
         help = 'Local IP address.')
-    parser.add_argument( '--net', action = 'store', type = str, required = True, \
-        help = 'File of network links with each line in the format <LOCAL_IP:NEIGHBOR_IP,NEIGHBOR_IP,etc.>.')
     args = parser.parse_args()
-    server_process(args.ip)
+    start_server(args.ip)
     
