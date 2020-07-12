@@ -2,6 +2,7 @@
 
 import random
 import math
+import argparse
 
 MAX_DIST = 10
 
@@ -32,6 +33,18 @@ def print_simulation(positions):
     print ("\n")
 
 # Math functions
+def arithmetic_mean(listA):
+    return float(sum(listA)) / float(len(listA))
+
+def geometric_mean(listA):
+    product = 1
+    for value in listA:
+        product *= value
+    return product**(1/float(len(listA)))
+
+def quadratic_mean(listA):
+    squares = [value**2 for value in listA]
+    return math.sqrt(float(sum(squares)) / float(len(listA)))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simulates positional situations of strangers walking around you in public.')
@@ -54,5 +67,18 @@ if __name__ == "__main__":
             except:
                 risk_score = input("Enter a valid rating.\n")
 
-        # Build feature list
-        # Closest Distance, Mean Square, 
+        # Build feature list + Label
+        # Closest Distance, Arithmetic Mean, Geometric Mean, Quadratic Mean, Label(Risk), Distances, Positions
+        try:
+            f = open(args.file)
+            f.close()
+        except:
+            print("Making new file...")
+            with open(args.file, 'w+') as f:
+                f.write("MIN_DIST\tA_MEAN\tG_MEAN\tQ_MEAN\tRISK\tDISTANCES\tPOSITIONS\n")
+        with open(args.file, 'a') as f:
+            fields = [min(distances), arithmetic_mean(distances), \
+                geometric_mean(distances), quadratic_mean(distances), risk_score, distances, positions]
+            fields = [str(field) for field in fields]
+            f.write("\t".join(fields) + "\n")
+        
