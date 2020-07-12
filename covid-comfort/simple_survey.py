@@ -5,6 +5,7 @@ import math
 import argparse
 
 MAX_DIST = 10
+MAX_NODES = 20
 
 def generate_random_positions(num):
     positions = []
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
     while True:
         # Generate positions
-        positions, distances = generate_random_positions(random.randint(1,10))
+        positions, distances = generate_random_positions(random.randint(1,MAX_NODES))
         # Print positions
         print_simulation(positions)
         
@@ -75,9 +76,9 @@ if __name__ == "__main__":
         except:
             print("Making new file...")
             with open(args.file, 'w+') as f:
-                f.write("MIN_DIST\tA_MEAN\tG_MEAN\tQ_MEAN\tRISK\tDISTANCES\tPOSITIONS\n")
+                f.write("NUM\tMIN_DIST\tA_MEAN\tG_MEAN\tQ_MEAN\tRISK\tDISTANCES\tPOSITIONS\n")
         with open(args.file, 'a') as f:
-            fields = [min(distances), arithmetic_mean(distances), \
+            fields = [len(distances), min(distances), arithmetic_mean(distances), \
                 geometric_mean(distances), quadratic_mean(distances), risk_score, distances, positions]
             fields = [str(field) for field in fields]
             f.write("\t".join(fields) + "\n")
