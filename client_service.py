@@ -42,7 +42,7 @@ def client_process(self_ip, neighbor_ip, base_path):
     #     print("\tSent!")
     #     message = input(">>> ")
     # soc.send(b'--quit--')
-    base_path = "/" + base_path.strip("/")
+    base_path = "/" + base_path.strip("/") + "/" + self_ip
     outbox_path = base_path + "/outbox"
     outfile = outbox_path + "/sample.txt"
     while True:
@@ -56,12 +56,7 @@ def client_process(self_ip, neighbor_ip, base_path):
         # Sending mechanism from: 
         # https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
         if os.path.exists(outfile):
-            filesize = os.path.getsize(outfile)
-            
-            with open(outfile, 'rb') as f:
-                for _ in progress:
-                    bytes_read = f.read(buffer_size)
-                    soc.sendall(bytes_read)
+            send_file(soc, outfile)
         time.sleep(10)
 
 # Sending mechanism from: 
@@ -70,7 +65,7 @@ def send_file(soc, filename):
     filesize = os.path.getsize(filename)
     soc.send(f"{filename}{SEPARATOR}{filesize}".encode())
     # Wait for acknowledgment
-    if soc.recv(5120).decode("utf8") == "^":
+    if soc.recv(5120).decode() == "^":
         pass
     # Progress bar
     progress = tqdm.tqdm(range(filesize), f"Sending {filename}", \
@@ -85,7 +80,7 @@ def send_file(soc, filename):
             # Send bytes
             soc.sendall(bytes_read)
             # Wait for acknowledgment
-            if soc.recv(5120).decode("utf8") == "-":
+            if soc.recv(5120).decode() == "-":
                 pass
             # Update progress bar
             progress.update(len(bytes_read))
@@ -96,6 +91,8 @@ if __name__ == "__main__":
         help = 'Local IP address.')
     parser.add_argument( '--net', action = 'store', type = str, required = True, \
         help = 'File of network links with each line in the format <LOCAL_IP:NEIGHBOR_IP,NEIGHBOR_IP,etc.>.')
+    parser.add_argument( '--path', action = 'store', type = str, required = True, \
+        help = 'Path to base directory.')
     args = parser.parse_args()
 
     # Process netlinks file to get neighbors
@@ -110,7 +107,7 @@ if __name__ == "__main__":
     for neighbor_ip in net_lookup[args.ip]:
         print (neighbor_ip)
         try:
-            Thread(target=client_process, args=(args.ip, neighbor_ip,)).start()
+            Thread(target=client_process, args=(args.ip, neighbor_ip, args.path)).start()
             print("\tNeighbor thread started.")
         except:
             print("\tCan't start thread.")

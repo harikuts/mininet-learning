@@ -5,6 +5,10 @@ import os
 import traceback
 from threading import Thread
 import argparse
+import tqdm
+
+SEPARATOR = "<SEP>"
+BUFFER_SIZE = 4096
 
 """
 This code is based on code from
@@ -47,19 +51,55 @@ def start_server(ip_addr):
     soc.close()
 
 # Thread dispathed for each client while the connection is alive
-def client_thread(connection, ip, port, max_buffer_size = 5120):
+def client_thread(connection, ip, port, max_buffer_size = BUFFER_SIZE):
     is_active = True
     while is_active:
         # Receive input from the connection
-        client_input = receive_input(connection, max_buffer_size)
-        if "--quit--" in client_input:
-            print("Client at port " + str(port) + " is requesting to quit.")
-            connection.close()
-            print("\tConnection closed.")
-            is_active = False
-        else:
-            print("From port " + str(port) + ": " + client_input)
-            connection.sendall("-".encode("utf8"))
+        # client_input = receive_input(connection, max_buffer_size)
+        # if "--quit--" in client_input:
+        #     print("Client at port " + str(port) + " is requesting to quit.")
+        #     connection.close()
+        #     print("\tConnection closed.")
+        #     is_active = False
+        # else:
+        #     print("From port " + str(port) + ": " + client_input)
+        #     connection.sendall("-".encode("utf8"))
+
+        receive_file(ip, connection, max_buffer_size)
+
+# Receiving a file
+def receive_file(target_ip, connection, max_buffer_size):
+    # First get file information
+    try:
+        received = connection.recv(BUFFER_SIZE).decode()
+        filename, filesize = received.split(SEPARATOR)
+        filename = os.path.basename(filename)
+        filesize = int(filesize)
+        # Send acknowledgment
+        connection.sendall("^".encode())
+    except Exception as error:
+        # Error handling code here
+        print ("Invalid filename or filesize received.\n" + repr(error))
+        return None
+    # Then start to receive
+    try:
+        # Progress
+        progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", \
+            unit="B", unit_scale=True, unit_divisor=1024)
+        with open(filename, "wb") as f:
+            for _ in progress:
+                # Read in incoming data; once over, break
+                bytes_read = connection.recv(BUFFER_SIZE)
+                if not bytes_read:
+                    break
+                # Write to the file
+                f.write(bytes_read)
+                # Update progress bar
+                progress.update(len(bytes_read))
+                connection.sendall("-".encode())
+    except Exception as error:
+        print ("Something went wrong receiving the file...\n" + repr(error))
+
 
 # Receiving input
 def receive_input(connection, max_buffer_size):
