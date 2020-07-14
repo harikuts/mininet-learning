@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import socket
 import sys
+import os
 import traceback
 from threading import Thread
 import argparse
@@ -77,11 +78,50 @@ def process_input(input_str):
     print("Processing input...")
     return ("\"" + input_str + "\"")
 
+# File structure building
+def build_file_structure(ip_addr, netfile, base_path):
+    # Process netlinks file to get neighbors
+    net_lookup = {}
+    with open(args.net) as f:
+        for line in f.readlines():
+            line = line.strip()
+            info = line.split(':')
+            net_lookup[info[0]] = info[1].split(',')
+    neighbors = net_lookup[args.ip]
+
+    # Check if base path exists
+    base_path = "/" + base_path.strip("/")
+    if not os.path.exists(base_path):
+        print("Storage path not valid.")
+        sys.exit()
+    # Check if node folder exists; if not, make it
+    node_folder = base_path + "/" + ip_addr
+    if not os.path.exists(node_folder):
+        os.makedirs(node_folder)
+    # Check if outbox exists; if not, make it
+    outbox_path = node_folder + "/outbox"
+    if not os.path.exists(outbox_path):
+        os.makedirs(outbox_path)
+    # Check if inbox exists; if not, make it
+    inbox_path = node_folder + "/inbox"
+    if not os.path.exists(inbox_path):
+        os.makedirs(inbox_path)
+    # Check if each neighbor tag exists
+    for neighbor in neighbors:
+        neighbor_path = inbox_path + "/" + neighbor
+        if not os.path.exists(neighbor_path):
+            os.makedirs(neighbor_path)
+
 # MAIN
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run client service.')
     parser.add_argument( '--ip', action = 'store', type = str, required = True, \
         help = 'Local IP address.')
+    parser.add_argument( '--net', action = 'store', type = str, required = True, \
+        help = 'File of network links with each line in the format <LOCAL_IP:NEIGHBOR_IP,NEIGHBOR_IP,etc.>.')
+    parser.add_argument( '--path', action = 'store', type = str, required = True, \
+        help = 'Path to base directory.')
     args = parser.parse_args()
+    build_file_structure(args.ip, args.net, args.path)
     start_server(args.ip)
     
