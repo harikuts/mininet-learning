@@ -5,7 +5,11 @@ import os
 import argparse
 import traceback
 import time
+import tqdm
 from threading import Thread
+
+SEPARATOR = "<SEP>"
+BUFFER_SIZE = 4096
 
 """
 This code is based on code from
@@ -49,12 +53,42 @@ def client_process(self_ip, neighbor_ip, base_path):
         #     pass
         # print("\tSent!")
 
+        # Sending mechanism from: 
+        # https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
         if os.path.exists(outfile):
+            filesize = os.path.getsize(outfile)
+            
             with open(outfile, 'rb') as f:
-                bytes_read = f.read(buffer_size)
-                soc.sendall(bytes_read)
+                for _ in progress:
+                    bytes_read = f.read(buffer_size)
+                    soc.sendall(bytes_read)
         time.sleep(10)
-        
+
+# Sending mechanism from: 
+# https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
+def send_file(soc, filename):
+    filesize = os.path.getsize(filename)
+    soc.send(f"{filename}{SEPARATOR}{filesize}".encode())
+    # Wait for acknowledgment
+    if soc.recv(5120).decode("utf8") == "^":
+        pass
+    # Progress bar
+    progress = tqdm.tqdm(range(filesize), f"Sending {filename}", \
+            unit="B", unit_scale=True, unit_divisor=1024)
+    # Actually read from file
+    with open(filename, "rb") as f:
+        for _ in progress:
+            # Read bytes; if none left, then break
+            bytes_read = f.read(BUFFER_SIZE)
+            if not bytes_read:
+                break
+            # Send bytes
+            soc.sendall(bytes_read)
+            # Wait for acknowledgment
+            if soc.recv(5120).decode("utf8") == "-":
+                pass
+            # Update progress bar
+            progress.update(len(bytes_read))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run client service.')
