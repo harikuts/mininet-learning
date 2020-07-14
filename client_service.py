@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import socket
 import sys
+import os
 import argparse
 import traceback
 import time
@@ -15,11 +16,12 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 # parser.add_argument( '--div', action = 'store', type = str, required = True, \
 #     help = 'IP addresses and divisions.')
 
-def client_process(neighbor_ip):
+def client_process(self_ip, neighbor_ip, base_path):
     # Get host and port information
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = neighbor_ip
     port = 8000
+    buffer_size = 4096
     try:
         soc.connect((host, port))
     except:
@@ -36,14 +38,22 @@ def client_process(neighbor_ip):
     #     print("\tSent!")
     #     message = input(">>> ")
     # soc.send(b'--quit--')
-    message = "hi"
+    base_path = "/" + base_path.strip("/")
+    outbox_path = base_path + "/outbox"
+    outfile = outbox_path + "/sample.txt"
     while True:
-        soc.sendall(message.encode("utf8"))
-        print("Delivering...")
-        if soc.recv(5120).decode("utf8") == "-":
-            pass
-        print("\tSent!")
-        time.sleep(5)
+        # message = "hi"
+        # soc.sendall(message.encode("utf8"))
+        # print("Delivering...")
+        # if soc.recv(5120).decode("utf8") == "-":
+        #     pass
+        # print("\tSent!")
+
+        if os.path.exists(outfile):
+            with open(outfile, 'rb') as f:
+                bytes_read = f.read(buffer_size)
+                soc.sendall(bytes_read)
+        time.sleep(10)
         
 
 if __name__ == "__main__":
@@ -66,7 +76,7 @@ if __name__ == "__main__":
     for neighbor_ip in net_lookup[args.ip]:
         print (neighbor_ip)
         try:
-            Thread(target=client_process, args=(neighbor_ip,)).start()
+            Thread(target=client_process, args=(args.ip, neighbor_ip,)).start()
             print("\tNeighbor thread started.")
         except:
             print("\tCan't start thread.")
