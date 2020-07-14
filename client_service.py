@@ -57,6 +57,7 @@ def client_process(self_ip, neighbor_ip, base_path):
         # https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
         if os.path.exists(outfile):
             send_file(soc, outfile)
+        break
         time.sleep(10)
 
 # Sending mechanism from: 
