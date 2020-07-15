@@ -78,8 +78,8 @@ def receive_file(target_ip, connection, max_buffer_size):
         # Send acknowledgment
         connection.sendall("^".encode())
     except Exception as error:
-        # Error handling code here
-        print ("Invalid filename or filesize received.\n" + repr(error))
+        # # Error handling code here
+        # print ("Invalid filename or filesize received.\n" + repr(error))
         return None
     # Then start to receive
     try:
@@ -130,14 +130,14 @@ def build_file_structure(ip_addr, netfile, base_path):
     neighbors = net_lookup[args.ip]
 
     # Check if base path exists
-    base_path = "/" + base_path.strip("/")
-    if not os.path.exists(base_path):
+    node_folder = "/" + base_path.strip("/")
+    if not os.path.exists(node_folder):
         print("Storage path not valid.")
         sys.exit()
     # Check if node folder exists; if not, make it
-    node_folder = base_path + "/" + ip_addr
-    if not os.path.exists(node_folder):
-        os.makedirs(node_folder)
+    # node_folder = base_path + "/" + ip_addr
+    # if not os.path.exists(node_folder):
+    #     os.makedirs(node_folder)
     # Check if outbox exists; if not, make it
     outbox_path = node_folder + "/outbox"
     if not os.path.exists(outbox_path):
