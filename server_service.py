@@ -18,6 +18,51 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 def main():
     start_server('127.0.0.1')
 
+class Server:
+    # Constructor
+    def __init__(self, ip_addr, net_file, storage_path):
+        self.ip_addr = ip_addr
+        self.net_file = net_file
+        self.storage_path = storage_path
+    # Server process
+    def start_server(self):
+        # Set host and port information
+        host = self.ip_addr
+        port = 8000
+
+        # Create socket
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print ("Socket created.")
+        # Bind socket
+        try:
+            soc.bind((host, port))
+        except:
+            print("Bind failed. Error:\n" + str(sys.exc_info()))
+            sys.exit()
+        # Have socket listen and queue up to 6 requests
+        soc.listen(6)
+        print("Socket now listening.")
+        # Infinite loop to always accept new connections.
+        while True:
+            connection, address = soc.accept()
+            ip, port = str(address[0]), str(address[1])
+            print("Connected at port " + ip + ": " + port)
+
+            try:
+                Thread(target=client_thread, args=(connection, ip, port)).start()
+                print("\tClient thread started.")
+            except:
+                print("\tCould not start thread.")
+                traceback.print_exc()
+        soc.close()
+
+class ClientConnection:
+    def __init__(self, connection, ip, port, max_buffer_size):
+        self.connection = connection
+        self.ip = ip
+        self.port = port
+
 # Starts server and waits for connections, creates a thread for each connection
 def start_server(ip_addr):
     # Set host and port information
