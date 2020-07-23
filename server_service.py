@@ -18,6 +18,110 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 def main():
     start_server('127.0.0.1')
 
+class Server:
+    # Constructor
+    def __init__(self, ip_addr, net_file, storage_path):
+        self.ip_addr = ip_addr
+        self.net_file = net_file
+        self.storage_path = storage_path
+        self.build_file_structure()
+    # Server process
+    def start_server(self):
+        # Set host and port information
+        host = self.ip_addr
+        port = 8000
+
+        # Create socket
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print ("Socket created.")
+        # Bind socket
+        try:
+            soc.bind((host, port))
+        except:
+            print("Bind failed. Error:\n" + str(sys.exc_info()))
+            sys.exit()
+        # Have socket listen and queue up to 6 requests
+        soc.listen(6)
+        print("Socket now listening.")
+        # Infinite loop to always accept new connections.
+        while True:
+            connection, address = soc.accept()
+            ip, port = str(address[0]), str(address[1])
+            print("Connected at port " + ip + ": " + port)
+
+            try:
+                client = ClientConnection(connection, ip, port)
+                client.client_start()
+                print("\tClient thread started.")
+            except:
+                print("\tCould not start thread.")
+                traceback.print_exc()
+        soc.close()
+    # File structure building
+    def build_file_structure(self):
+        # Process netlinks file to get neighbors
+        net_lookup = {}
+        with open(self.net_file) as f:
+            for line in f.readlines():
+                line = line.strip()
+                info = line.split(':')
+                net_lookup[info[0]] = info[1].split(',')
+        neighbors = net_lookup[self.ip_addr]
+
+        # Check if base path exists
+        node_folder = "/" + self.storage_path.strip("/")
+        if not os.path.exists(node_folder):
+            print("Storage path not valid.")
+            sys.exit()
+        # Check if node folder exists; if not, make it
+        # node_folder = base_path + "/" + ip_addr
+        # if not os.path.exists(node_folder):
+        #     os.makedirs(node_folder)
+        # Check if outbox exists; if not, make it
+        outbox_path = node_folder + "/outbox"
+        if not os.path.exists(outbox_path):
+            os.makedirs(outbox_path)
+        # Check if inbox exists; if not, make it
+        inbox_path = node_folder + "/inbox"
+        if not os.path.exists(inbox_path):
+            os.makedirs(inbox_path)
+        # Check if each neighbor tag exists
+        for neighbor in neighbors:
+            neighbor_path = inbox_path + "/" + neighbor
+            if not os.path.exists(neighbor_path):
+                os.makedirs(neighbor_path)
+
+class ClientConnection:
+    def __init__(self, connection, ip, port, max_buffer_size = BUFFER_SIZE):
+        self.connection = connection
+        self.ip = ip
+        self.port = port
+        self.buffer_size = max_buffer_size
+
+    # Client start service
+    def client_start(self):
+        Thread(target=client_thread, args=(self.connection, self.ip, self.port)).start()
+
+    # Thread dispathed for each client while the connection is alive
+    def client_thread(self, connection, ip, port, max_buffer_size = BUFFER_SIZE):
+        is_active = True
+        while is_active:
+            # Receive input from the connection
+            # client_input = receive_input(connection, max_buffer_size)
+            # if "--quit--" in client_input:
+            #     print("Client at port " + str(port) + " is requesting to quit.")
+            #     connection.close()
+            #     print("\tConnection closed.")
+            #     is_active = False
+            # else:
+            #     print("From port " + str(port) + ": " + client_input)
+            #     connection.sendall("-".encode("utf8"))
+
+            receive_file(ip, connection, max_buffer_size)
+
+    
+
 # Starts server and waits for connections, creates a thread for each connection
 def start_server(ip_addr):
     # Set host and port information
@@ -162,6 +266,9 @@ if __name__ == "__main__":
     parser.add_argument( '--path', action = 'store', type = str, required = True, \
         help = 'Path to base directory.')
     args = parser.parse_args()
-    build_file_structure(args.ip, args.net, args.path)
-    start_server(args.ip)
+    # build_file_structure(args.ip, args.net, args.path)
+    # start_server(args.ip)
+
+    server = Server(args.ip, args.net, args.path)
+    server.start_server()
     
