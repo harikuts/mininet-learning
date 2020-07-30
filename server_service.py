@@ -101,7 +101,7 @@ class ClientConnection:
 
     # Client start service
     def client_start(self):
-        Thread(target=client_thread, args=(self.connection, self.ip, self.port)).start()
+        Thread(target=self.client_thread, args=(self.connection, self.ip, self.port)).start()
 
     # Thread dispathed for each client while the connection is alive
     def client_thread(self, connection, ip, port, max_buffer_size = BUFFER_SIZE):
