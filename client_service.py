@@ -20,6 +20,27 @@ https://www.tutorialspoint.com/socket-programming-with-multi-threading-in-python
 # parser.add_argument( '--div', action = 'store', type = str, required = True, \
 #     help = 'IP addresses and divisions.')
 
+class Client:
+    def __init__(self, ip_addr, net_links, base_path):
+        self.ip = ip
+        self.path = base_path
+        self.net_lookup = {}
+        with open(net_links) as f:
+            for line in f.readlines():
+                line = line.strip()
+                info = line.split(':')
+                self.net_lookup[info[0]] = info[1].split(',')
+    
+    def client_start(self):
+        for neighbor_ip in net_lookup[args.ip]:
+            print (neighbor_ip)
+            try:
+                Thread(target=client_process, args=(self.ip, neighbor_ip, self.path)).start()
+                print("\tNeighbor thread started.")
+            except:
+                print("\tCan't start thread.")
+                traceback.print_exc()
+
 def client_process(self_ip, neighbor_ip, base_path):
     # Get host and port information
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
